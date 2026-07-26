@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "approvals": {
+    "123456789|example keyword": {
+      "verdict": "related",
+      "reviewed_at": "2026-01-01T12:00:00+00:00",
+      "country": "US",
+      "app_id": "1234567890",
+      "evidence": "Top storefront results solve the same user problem as the advertised app.",
+      "competitor_ids": ["1111111111", "2222222222"]
+    }
+  }
+}

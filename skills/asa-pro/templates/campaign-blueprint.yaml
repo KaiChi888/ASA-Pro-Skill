@@ -29,6 +29,12 @@ promotion:
   signal: installs
   minimum: 1
   lookback_days: 3
+  competitor_relevance:
+    required: true
+    country_specific: true
+    allowed_to_promote: related
+    review_max_age_days: 30
+    approval_file: "~/.aads/asa-pro-relevance.json"
   seed_floor: "1.00"
   avg_cpt_buffer: "0.05"
   bid_ceiling: "2.00"

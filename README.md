@@ -32,8 +32,9 @@ The skill at `skills/asa-pro/SKILL.md` exposes `asa-pro` to agents supported by 
 - Two ad groups: `Broad Discovery` and `Exact Match`.
 - Search Match off, Search Results placement, manual CPT.
 - Every ad group targets New Users by excluding existing app downloaders.
-- Broad search terms that generate downloads are promoted to Exact.
-- Exact is created first; then the term becomes an Exact negative in Broad so traffic routes safely.
+- Broad search terms that generate downloads become research candidates, not automatic Exact keywords.
+- Before promotion, inspect that keyword's country-specific App Store search results and competitors with the included research tool. Only a current evidence-backed `related` verdict can proceed.
+- After approval, Exact is created first; then the term becomes an Exact negative in Broad so traffic routes safely.
 - Revenue-proven Exact winners can be split into dedicated campaigns.
 - Keywords start around USD 1–2, then bids are reduced gradually toward efficient avgCPT.
 - Deterministic three-hour harvesting plus daily reasoning-based bid review.
@@ -51,10 +52,20 @@ The skill at `skills/asa-pro/SKILL.md` exposes `asa-pro` to agents supported by 
 6. Approve target countries and daily budgets.
 7. Create one campaign per country with Broad and Exact ad groups.
 8. Verify New Users targeting and RUNNING status.
-9. Seed localized keywords and test `python3 skills/asa-pro/scripts/broad_to_exact.py --dry-run --campaign-name-prefix "YOUR APP -"`.
-10. Enable three-hour harvesting and daily Exact bid review after two clean dry runs.
+9. Seed localized keywords and use `app_store_relevance.py` to review candidate terms against the top storefront competitors.
+10. Save `related`/`ambiguous`/`irrelevant` evidence outside the repo, then test `broad_to_exact.py --dry-run --relevance-file <path>`.
+11. Enable three-hour harvesting and daily Exact bid review after two clean dry runs.
 
 See [`skills/asa-pro/SKILL.md`](skills/asa-pro/SKILL.md) and [`skills/asa-pro/references/setup.md`](skills/asa-pro/references/setup.md).
+
+### Mandatory competitor relevance gate
+
+```bash
+python3 skills/asa-pro/scripts/app_store_relevance.py \
+  --keyword "photo cleaner" --app-id 1234567890 --country US --limit 10
+```
+
+The tool queries the country-specific iTunes Lookup/Search APIs and returns the advertised app, top result apps, genres, descriptions, ratings, links, and comparison signals. An agent or human must inspect dominant user intent and record `related`, `ambiguous`, or `irrelevant`; the heuristic suggestion never auto-approves. `broad_to_exact.py --apply` now refuses to run without a current approval file, and only `related` terms can be mutated. See [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md).
 
 ### CLI installation
 
@@ -109,8 +120,9 @@ npx skills add KaiChi888/ASA-Pro-Skill --list
 - 每個 Campaign 有 `Broad Discovery` 與 `Exact Match` 兩個 Ad Group。
 - 關閉 Search Match，只投 Search Results，採手動 CPT。
 - 所有廣告群組都設定為 **New Users**，排除已下載 App 的用戶。
-- Broad 搜尋詞產生下載後，提升為 Exact 關鍵字。
-- 先確認 Exact 建立成功，再於 Broad 加入同詞 Exact Negative，安全導流到 Exact。
+- Broad 搜尋詞產生下載後只會成為「待調研候選」，不會自動提升為 Exact。
+- 提升前必須查該國 App Store 搜尋結果與競品；只有具證據且仍有效的 `related` 判定才能繼續。
+- 核准後先確認 Exact 建立成功，再於 Broad 加入同詞 Exact Negative，安全導流到 Exact。
 - 有收入、付費訂閱與良好 ROAS 的 Exact 關鍵字，可拆成獨立 Campaign。
 - 新關鍵字先用約 **US$1–2** 取得曝光，再依 avgCPT、下載與收入逐步降價。
 - 每三小時執行 deterministic Broad → Exact；每天一次由 Agent 綜合 3/7 日資料與 RevenueCat 審查 Exact 出價。
@@ -128,10 +140,20 @@ npx skills add KaiChi888/ASA-Pro-Skill --list
 6. 由使用者確認國家與每日預算。
 7. 每國建立 Campaign、Broad 與 Exact 群組。
 8. 驗證 New Users targeting 與 RUNNING 狀態。
-9. 加入在地化關鍵字，測試 `python3 skills/asa-pro/scripts/broad_to_exact.py --dry-run --campaign-name-prefix "YOUR APP -"`。
-10. 連續兩次 dry-run 正確後，再啟用每三小時採集與每日出價審查。
+9. 加入在地化關鍵字，以 `app_store_relevance.py` 對待提升詞查詢該國前幾名競品。
+10. 將 `related`／`ambiguous`／`irrelevant` 與證據存於 Repo 外，再測試 `broad_to_exact.py --dry-run --relevance-file <path>`。
+11. 連續兩次 dry-run 正確後，再啟用每三小時採集與每日出價審查。
 
 完整流程請看 [`skills/asa-pro/SKILL.md`](skills/asa-pro/SKILL.md) 與 [`skills/asa-pro/references/setup.md`](skills/asa-pro/references/setup.md)。
+
+### 強制競品相關性 Gate
+
+```bash
+python3 skills/asa-pro/scripts/app_store_relevance.py \
+  --keyword "photo cleaner" --app-id 1234567890 --country US --limit 10
+```
+
+工具會查詢指定國家的 iTunes Lookup／Search API，輸出被投放 App、搜尋結果前幾名 App、類別、描述、評分、連結與比對訊號。Agent 或人工必須依主要使用者意圖判斷 `related`、`ambiguous` 或 `irrelevant`；工具的 heuristic 建議不會自動核准。現在 `broad_to_exact.py --apply` 沒有有效審查檔就會拒絕寫入，而且只有 `related` 能建立 Exact 與 Broad Negative。詳見 [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md)。
 
 ### CLI 安裝
 
