@@ -36,6 +36,7 @@ The skill at `skills/asa-pro/SKILL.md` exposes `asa-pro` to agents supported by 
 - Before promotion, inspect that keyword's country-specific App Store search results and competitors with the included research tool. Only a current evidence-backed `related` verdict can proceed.
 - After approval, Exact is created first; then the term becomes an Exact negative in Broad so traffic routes safely.
 - Revenue-proven Exact winners can be split into dedicated campaigns.
+- Once daily, the skill ranks possible dedicated-campaign candidates and shows them to the user for `approve`, `hold`, or `reject`; it never splits automatically.
 - Keywords start around USD 1–2, then bids are reduced gradually toward efficient avgCPT.
 - Deterministic three-hour harvesting plus daily reasoning-based bid review.
 - CI validation plus safety/troubleshooting ladders for zero exposure, broken attribution, and partial mutations.
@@ -66,6 +67,10 @@ python3 skills/asa-pro/scripts/app_store_relevance.py \
 ```
 
 The tool queries the country-specific iTunes Lookup/Search APIs and returns the advertised app, top result apps, genres, descriptions, ratings, links, and comparison signals. An agent or human must inspect dominant user intent and record `related`, `ambiguous`, or `irrelevant`; the heuristic suggestion never auto-approves. `broad_to_exact.py --apply` now refuses to run without a current approval file, and only `related` terms can be mutated. See [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md).
+
+### Daily dedicated-campaign decision queue
+
+Once per day, ASA Pro reviews Exact keywords using 30–60-day Apple Ads and RevenueCat evidence plus 3/7/14-day trends. It displays only actionable `scale independently` or `isolate for cost control` candidates, including spend, installs, CPI, paid customers, revenue/ROAS basis, attribution coverage, proposed campaign/bid, budget redistribution versus expansion, migration plan, and rollback. The user chooses `approve`, `hold`, or `reject` per immutable candidate ID. No campaign is split, no budget is moved, and no source keyword is paused without explicit approval. See [`daily-dedicated-campaign-review.md`](skills/asa-pro/references/daily-dedicated-campaign-review.md).
 
 ### CLI installation
 
@@ -124,6 +129,7 @@ npx skills add KaiChi888/ASA-Pro-Skill --list
 - 提升前必須查該國 App Store 搜尋結果與競品；只有具證據且仍有效的 `related` 判定才能繼續。
 - 核准後先確認 Exact 建立成功，再於 Broad 加入同詞 Exact Negative，安全導流到 Exact。
 - 有收入、付費訂閱與良好 ROAS 的 Exact 關鍵字，可拆成獨立 Campaign。
+- 每天一次審查可能需要獨立 Campaign 的候選詞，顯示給使用者選擇 `approve`、`hold` 或 `reject`，不會自動拆分。
 - 新關鍵字先用約 **US$1–2** 取得曝光，再依 avgCPT、下載與收入逐步降價。
 - 每三小時執行 deterministic Broad → Exact；每天一次由 Agent 綜合 3/7 日資料與 RevenueCat 審查 Exact 出價。
 - 內建 CI 驗證、安全護欄，以及零曝光、歸因中斷、部分寫入失敗的排查流程。
@@ -154,6 +160,10 @@ python3 skills/asa-pro/scripts/app_store_relevance.py \
 ```
 
 工具會查詢指定國家的 iTunes Lookup／Search API，輸出被投放 App、搜尋結果前幾名 App、類別、描述、評分、連結與比對訊號。Agent 或人工必須依主要使用者意圖判斷 `related`、`ambiguous` 或 `irrelevant`；工具的 heuristic 建議不會自動核准。現在 `broad_to_exact.py --apply` 沒有有效審查檔就會拒絕寫入，而且只有 `related` 能建立 Exact 與 Broad Negative。詳見 [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md)。
+
+### 每日獨立 Campaign 決策清單
+
+ASA Pro 每天一次以 30–60 日 Apple Ads／RevenueCat 證據，加上最近 3／7／14 日趨勢，審查所有 Exact 關鍵字。例行報告只顯示可執行的 `scale independently` 或 `isolate for cost control` 候選，包含花費、下載、CPI、付費客戶、收入／ROAS 口徑、歸因覆蓋率、建議 Campaign／出價、預算是重新分配或擴張、遷移與回滾方案。使用者依不可變 Candidate ID 選擇 `approve`、`hold` 或 `reject`。沒有明確核准前，不建立 Campaign、不移動預算，也不暫停來源關鍵字。詳見 [`daily-dedicated-campaign-review.md`](skills/asa-pro/references/daily-dedicated-campaign-review.md)。
 
 ### CLI 安裝
 

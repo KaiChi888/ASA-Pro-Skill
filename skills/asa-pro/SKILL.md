@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires internet access and the aads CLI; rc is required for RevenueCat analysis. Go 1.25+ is required only when building either CLI from source.
 metadata:
   author: "KaiChi888"
-  version: "1.1.0"
+  version: "1.2.0"
   tags: "apple-search-ads, asa, app-growth, app-store-competitors, revenuecat, roas, automation"
   homepage: "https://github.com/KaiChi888/ASA-Pro-Skill"
 ---
@@ -123,6 +123,16 @@ Do not isolate merely because CPI is low. Prefer an inclusive 60-day review:
 - derived: Gross ROAS, paid CPA, attribution coverage;
 - recent 3/7/14-day trend versus the long window.
 
+Once per day, review all Exact keywords and rank only actionable candidates:
+
+- `scale independently` — mature attributed revenue/LTV, meaningful repeatable volume, acceptable economics, and a real need for independent control;
+- `isolate for cost control` — strategically relevant volume that needs separate bid/budget limits;
+- `monitor` or `do not split` — keep out of the routine decision queue unless the user asks for all observations.
+
+Display actionable candidates with immutable IDs, country, current location, spend/install/CPI, paid customers, gross/proceeds revenue and ROAS, attribution coverage, proposed campaign name/bid, budget redistribution versus expansion, migration plan, and rollback. Ask the user to choose `approve`, `hold`, or `reject` for each candidate. **Never split automatically and never treat silence as approval.** Approval authorizes a later, freshly verified implementation step—not an immediate hidden mutation.
+
+See `references/daily-dedicated-campaign-review.md`.
+
 When splitting:
 
 1. Create a dedicated single-country campaign and Exact ad group.
@@ -137,6 +147,7 @@ When splitting:
 
 - Every 3 hours: deterministic candidate harvest and competitor-research queue; only reviewed `related` candidates may proceed to Exact creation and Broad negative.
 - Once daily: reasoning-based Exact bid review using 3/7-day Apple Ads and RevenueCat.
+- Once daily: rank actionable dedicated-campaign candidates using 30–60-day evidence plus 3/7/14-day trends; display them for `approve`/`hold`/`reject`. Never split automatically.
 - Campaign budgets: recommendations only unless explicitly delegated.
 
 Reports should omit no-data campaigns. The three-hour report includes actions, failures, spend/install deltas, interval CPI, and attribution health. The daily report includes bid changes, maintained winners, pause suggestions, questionable relevance, RevenueCat coverage, and budget recommendations.
@@ -155,6 +166,7 @@ After writes, re-list and verify status, match type, bid, New Users targeting, a
 - `references/operations.md` — safe `aads` recipes.
 - `references/automation.md` — deterministic cron and state.
 - `references/bidding-and-splitting.md` — cost control and dedicated campaigns.
+- `references/daily-dedicated-campaign-review.md` — once-daily candidate ranking and user decision queue.
 - `references/revenuecat.md` — RevenueCat commands, attribution health, and revenue definitions.
 - `references/competitor-relevance.md` — country-specific App Store result research and approval gate.
 - `references/safety-and-troubleshooting.md` — business gates, hard guardrails, recovery, and diagnostic ladders.

@@ -48,6 +48,16 @@ Once daily:
 8. save compact decision state;
 9. recommend budgets but do not mutate without explicit delegation.
 
+## Daily dedicated-campaign candidate review
+
+Run once per day after Apple Ads and RevenueCat collection. Review Exact keywords with an inclusive 30–60-day window plus recent 3/7/14-day trends. Rank only actionable `scale independently` and `isolate for cost control` candidates; keep insufficient-data terms as internal `monitor` observations.
+
+For each candidate, show country, keyword/ID, current campaign/ad group, spend, installs, CPI, paid customers, revenue, ROAS basis, attribution coverage, rationale, proposed campaign name, seed bid, and whether budget is redistribution or expansion. Include safe migration and rollback plans.
+
+Present the ranked queue to the user for `approve`, `hold`, or `reject`. Silence is not approval. Do not create campaigns, change budgets, pause source keywords, or add routing changes until the user explicitly approves the immutable candidate key. If none qualify, report `No dedicated-campaign candidates today` with one short reason.
+
+See `references/daily-dedicated-campaign-review.md`.
+
 ## Failures
 
 - Timeout/rate limit: exponential backoff and `Retry-After`.
