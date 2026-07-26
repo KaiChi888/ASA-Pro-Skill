@@ -2,30 +2,37 @@
 
 ## Deterministic three-hour harvest
 
-`scripts/broad_to_exact.py` discovers enabled one-country campaigns, pairs Broad/Exact groups, reads recent terms, defaults to at least one install, creates/verifies Exact before Broad Exact negative, saves state in `~/.aads/asa-pro-state.json`, and supports `--dry-run`.
+`scripts/broad_to_exact.py` discovers enabled one-country campaigns, pairs Broad/Exact groups, reads recent terms, defaults to at least one install, enforces a current App Store competitor-relevance approval, creates/verifies Exact before Broad Exact negative, saves state in `~/.aads/asa-pro-state.json`, and supports `--dry-run`.
 
 The included script uses strict name pairing as a portable starter. In production, maintain a reviewed app/country ID registry and validate those IDs before each mutation; names can be renamed or collide.
 
 ```bash
-python3 scripts/broad_to_exact.py --dry-run
 python3 scripts/broad_to_exact.py --dry-run --campaign-name-prefix "MyApp -"
+python3 scripts/broad_to_exact.py --dry-run --campaign-name-prefix "MyApp -" \
+  --relevance-file "$HOME/.aads/asa-pro-relevance.json"
+
+# Writes are blocked unless the approval file is supplied.
+python3 scripts/broad_to_exact.py --apply --campaign-name-prefix "MyApp -" \
+  --relevance-file "$HOME/.aads/asa-pro-relevance.json"
 ```
+
+The first dry run can omit the file to produce `research_required` candidates. For each candidate, run `scripts/app_store_relevance.py`, review the top results, and write a `related`, `ambiguous`, or `irrelevant` evidence record. Only `related` proceeds; approvals expire after 30 days by default.
 
 Test twice before scheduling. Example:
 
 ```cron
-0 */3 * * * cd /absolute/path/to/ASA-Pro-Skill && /usr/bin/python3 scripts/broad_to_exact.py >> "$HOME/.aads/asa-pro-cron.log" 2>&1
+0 */3 * * * cd /absolute/path/to/installed/asa-pro && /usr/bin/python3 scripts/broad_to_exact.py --apply --campaign-name-prefix "MyApp -" --relevance-file "$HOME/.aads/asa-pro-relevance.json" >> "$HOME/.aads/asa-pro-cron.log" 2>&1
 ```
 
 Set explicit cwd/PATH/timeout and prevent overlap with scheduler locking or `flock`.
 
 ## State invariants
 
-Complete means Exact exists and is ACTIVE, Exact negative exists in Broad, read-back confirms both, and state is atomically persisted. If Exact succeeds but negative fails, retry negative next run. If Exact fails, never negative.
+Complete means a current country/app-matched `related` review exists, Exact exists and is ACTIVE, Exact negative exists in Broad, read-back confirms both, and state is atomically persisted. If Exact succeeds but negative fails, retry negative next run. If Exact fails, never negative.
 
 ## Reporting
 
-Include window/timezone, eligible terms, created/skipped Exact and negatives, failures, campaign spend/install delta and interval CPI only for active campaigns, and attribution health. Omit no-data campaigns. Reset daily snapshot baseline at date change.
+Include window/timezone, eligible terms, `research_required` terms and verdicts, competitor evidence summary, created/skipped Exact and negatives, failures, campaign spend/install delta and interval CPI only for active campaigns, and attribution health. Omit no-data campaigns. Reset daily snapshot baseline at date change.
 
 ## Daily reasoning-based bid review
 

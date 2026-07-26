@@ -1,12 +1,12 @@
 ---
 name: asa-pro
-description: Build and operate production Apple Search Ads Advanced campaigns with country-by-country Broad-to-Exact structure, New Users targeting, RevenueCat attribution, revenue-based keyword isolation, and CPT cost control using aads and rc CLI.
+description: Build and operate production Apple Search Ads Advanced campaigns with country-by-country Broad-to-Exact structure, App Store competitor relevance research, New Users targeting, RevenueCat attribution, revenue-based keyword isolation, and CPT cost control using aads and rc CLI.
 license: MIT
 compatibility: Requires internet access and the aads CLI; rc is required for RevenueCat analysis. Go 1.25+ is required only when building either CLI from source.
 metadata:
   author: "KaiChi888"
-  version: "1.0.1"
-  tags: "apple-search-ads, asa, app-growth, revenuecat, roas, automation"
+  version: "1.1.0"
+  tags: "apple-search-ads, asa, app-growth, app-store-competitors, revenuecat, roas, automation"
   homepage: "https://github.com/KaiChi888/ASA-Pro-Skill"
 ---
 
@@ -22,14 +22,15 @@ Use this skill when setting up, auditing, or operating Apple Search Ads Advanced
    - `Broad Discovery`: BROAD keywords, Search Match off.
    - `Exact Match`: EXACT keywords, Search Match off.
 4. Target **New Users** by excluding the advertised app's `adamId` in `appDownloaders.excluded`. Do not add age limits unless explicitly requested.
-5. Promote a Broad search term after the configured success signal. Default: at least one attributed Apple Ads install.
-6. Promotion is traffic routing:
+5. A Broad success signal is only a candidate. Before promotion, research that keyword's country-specific App Store results and verify that dominant competitor/user intent is related to the advertised app.
+6. Only a current, evidence-backed `related` verdict unlocks promotion. `ambiguous`, `irrelevant`, missing, stale, empty-result, or failed research must not create Exact or the routing negative.
+7. Promotion is traffic routing:
    - create and verify the EXACT keyword in `Exact Match` first;
    - add the same text as an EXACT negative in `Broad Discovery` second;
    - verify both and record state. Never negative first, because failed Exact creation would block traffic.
-7. Revenue—not CPI alone—decides whether an Exact winner deserves a dedicated campaign.
-8. Seed new keywords at USD 1–2 (default USD 1.00; up to USD 2.00 in expensive markets), then lower bids gradually toward observed avgCPT while protecting volume.
-9. Every mutation must be idempotent, scoped, freshly verified, and reported. Never store credentials in a repository or skill.
+8. Revenue—not CPI alone—decides whether an Exact winner deserves a dedicated campaign.
+9. Seed new keywords at USD 1–2 (default USD 1.00; up to USD 2.00 in expensive markets), then lower bids gradually toward observed avgCPT while protecting volume.
+10. Every mutation must be idempotent, scoped, freshly verified, and reported. Never store credentials in a repository or skill.
 
 ## Zero-to-running workflow
 
@@ -44,8 +45,9 @@ Read `references/setup.md` before mutations.
 7. Provision paused first where supported; create one campaign per country, then Broad and Exact ad groups.
 8. Set New Users targeting and verify no `PENDING_AUDIENCE_VERIFICATION` hold before enabling.
 9. Seed localized Broad and Exact keywords at USD 1–2; keep active keyword intent non-overlapping.
-10. Run `scripts/broad_to_exact.py --dry-run` until coverage and routing are correct.
-11. Schedule deterministic harvesting every three hours and reasoning-based Exact bid review once daily.
+10. Test `scripts/app_store_relevance.py` against real candidate keywords and store evidence-backed approvals outside the repository.
+11. Run `scripts/broad_to_exact.py --dry-run --relevance-file <path>` until research gating, coverage, and routing are correct.
+12. Schedule deterministic harvesting/research every three hours and reasoning-based Exact bid review once daily.
 
 ## Blueprint
 
@@ -75,7 +77,8 @@ Use a three-calendar-day default lookback. Search-term reporting is not reliably
 Default eligibility:
 
 ```text
-visible searchTermText AND totalInstalls >= 1 AND relevant to the app
+visible searchTermText AND totalInstalls >= 1
+AND current country-specific App Store competitor verdict == related
 ```
 
 A discovery-oriented account may explicitly override this to `taps >= 1`.
@@ -84,13 +87,17 @@ For every eligible term:
 
 1. Normalize only for comparison; preserve original text for creation.
 2. Skip if already routed.
-3. Create or verify Exact in the paired Exact ad group.
-4. Seed at `max(seed floor, avgCPT + buffer)`, capped by ceiling. Defaults: floor USD 1.00, buffer USD 0.05, ceiling USD 2.00.
-5. Create or verify ad-group-level EXACT negative in Broad.
-6. Re-list Exact keywords and Broad negatives.
-7. Persist success only after both objects exist.
+3. Run `scripts/app_store_relevance.py` with the term, campaign country, and advertised app Adam ID.
+4. Inspect the top 5–10 result apps: product job, positioning, genre, descriptions, screenshots/product pages, and optional Sensor Tower public evidence.
+5. Record `related`, `ambiguous`, or `irrelevant` with evidence. Heuristics never auto-approve.
+6. Continue only with a current country/app-matched `related` approval.
+7. Create or verify Exact in the paired Exact ad group.
+8. Seed at `max(seed floor, avgCPT + buffer)`, capped by ceiling. Defaults: floor USD 1.00, buffer USD 0.05, ceiling USD 2.00.
+9. Create or verify ad-group-level EXACT negative in Broad.
+10. Re-list Exact keywords and Broad negatives.
+11. Persist success only after both objects exist.
 
-Use `scripts/broad_to_exact.py`; see `references/automation.md`.
+Use `scripts/app_store_relevance.py` and `scripts/broad_to_exact.py`; see `references/competitor-relevance.md` and `references/automation.md`.
 
 ## Bid strategy: start high enough, then find the clearing price
 
@@ -128,7 +135,7 @@ When splitting:
 
 ## Automation split
 
-- Every 3 hours: deterministic search-term harvest, Exact creation, Broad negative, delta report.
+- Every 3 hours: deterministic candidate harvest and competitor-research queue; only reviewed `related` candidates may proceed to Exact creation and Broad negative.
 - Once daily: reasoning-based Exact bid review using 3/7-day Apple Ads and RevenueCat.
 - Campaign budgets: recommendations only unless explicitly delegated.
 
@@ -149,6 +156,7 @@ After writes, re-list and verify status, match type, bid, New Users targeting, a
 - `references/automation.md` — deterministic cron and state.
 - `references/bidding-and-splitting.md` — cost control and dedicated campaigns.
 - `references/revenuecat.md` — RevenueCat commands, attribution health, and revenue definitions.
+- `references/competitor-relevance.md` — country-specific App Store result research and approval gate.
 - `references/safety-and-troubleshooting.md` — business gates, hard guardrails, recovery, and diagnostic ladders.
 - `templates/campaign-blueprint.yaml` — campaign checklist.
 - `templates/cron-prompts.md` — scheduler briefs.
