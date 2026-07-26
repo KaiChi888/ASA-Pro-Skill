@@ -34,7 +34,7 @@ def tokens(value: str) -> set[str]:
 def fetch_json(url: str) -> dict[str, Any]:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "ASA-Pro-Skill/1.2.1 (+https://github.com/KaiChi888/ASA-Pro-Skill)"},
+        headers={"User-Agent": "ASA-Pro-Skill/1.2.2 (+https://github.com/KaiChi888/ASA-Pro-Skill)"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)
@@ -86,6 +86,10 @@ def main() -> int:
     search_url = "https://itunes.apple.com/search?" + urllib.parse.urlencode(
         {"term": args.keyword, "country": country, "entity": "software", "limit": args.limit}
     )
+    app_store_search_url = (
+        f"https://apps.apple.com/{country}/iphone/search?term="
+        + urllib.parse.quote(args.keyword, safe="")
+    )
 
     advertised_results = fetch_json(lookup_url).get("results") or []
     if not advertised_results:
@@ -115,6 +119,7 @@ def main() -> int:
         "schema_version": 1,
         "keyword": args.keyword,
         "country": country.upper(),
+        "app_store_search_url": app_store_search_url,
         "advertised_app": {
             "track_id": advertised.get("trackId"),
             "name": advertised.get("trackName"),
