@@ -22,12 +22,17 @@ jobs:
       - name: Discover skill with skills CLI
         run: npx --yes skills add . --list
       - name: Validate Python automation
-        run: python -m py_compile skills/asa-pro/scripts/broad_to_exact.py
+        run: |
+          python -m py_compile skills/asa-pro/scripts/broad_to_exact.py
+          python -m py_compile skills/asa-pro/scripts/app_store_relevance.py
       - name: Verify required package files
         run: |
           test -f skills/asa-pro/SKILL.md
           test -f README.md
           test -f skills/asa-pro/references/setup.md
           test -f skills/asa-pro/references/safety-and-troubleshooting.md
+          test -f skills/asa-pro/references/competitor-relevance.md
           test -f skills/asa-pro/scripts/broad_to_exact.py
+          test -f skills/asa-pro/scripts/app_store_relevance.py
+          test -f skills/asa-pro/templates/relevance-approvals.json
           test -f skills/asa-pro/templates/campaign-blueprint.yaml

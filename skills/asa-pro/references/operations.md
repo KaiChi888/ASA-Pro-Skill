@@ -42,7 +42,18 @@ aads reports searchterms --campaign-id "$CID" --adgroup-id "$BROAD_AID" \
   --start-time YYYY-MM-DD --end-time YYYY-MM-DD -o json
 ```
 
-Apple may hide low-volume text as `searchTermText: null`; skip hidden rows. Create Exact first:
+Apple may hide low-volume text as `searchTermText: null`; skip hidden rows. Before any Exact write, research the term's country-specific App Store results:
+
+```bash
+python3 scripts/app_store_relevance.py \
+  --keyword "$TERM" --app-id "$ADAM_ID" --country "$COUNTRY" --limit 10
+
+aads apps search --query "$TERM" -o json
+```
+
+Compare the advertised app with the top 5–10 apps' use cases, descriptions, genres, and product pages. Record an evidence-backed `related`, `ambiguous`, or `irrelevant` verdict as described in `references/competitor-relevance.md`. Do not continue unless a current `related` approval matches the campaign ID, country, and Adam ID.
+
+Create Exact first:
 
 ```bash
 aads keywords create --campaign-id "$CID" --adgroup-id "$EXACT_AID" \

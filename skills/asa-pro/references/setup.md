@@ -78,3 +78,7 @@ aads adgroups find-all --all -o json
 ```
 
 Record organization, app/`adamId`, country/currency, IDs/status/reasons, budget, Search Match, New Users targeting, all active/paused keywords and negatives, and recent 3/7/30-day spend/install/CPI/avgCPT. Do not mutate until scope, countries, budget, and currency are explicit.
+
+## 7. Configure the competitor relevance gate
+
+Copy `templates/relevance-approvals.json` to a private local path such as `~/.aads/asa-pro-relevance.json`. For each Broad performance candidate, run `scripts/app_store_relevance.py` with the campaign country and Adam ID, inspect the top App Store competitors, and record `related`, `ambiguous`, or `irrelevant` with evidence. Never store private account IDs or review files in this repository. `broad_to_exact.py --apply` requires the local file and accepts only a current country/app-matched `related` review.

@@ -17,7 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
@@ -145,6 +145,42 @@ def load_state(path: Path) -> dict[str, Any]:
     return payload
 
 
+def load_approvals(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+    payload = json.loads(path.read_text())
+    if payload.get("schema_version") != 1 or not isinstance(payload.get("approvals"), dict):
+        raise ValueError("relevance file must use schema_version 1 with an approvals object")
+    return payload["approvals"]
+
+
+def relevance_approved(
+    approvals: dict[str, Any], key: str, country: str, app_id: Any, max_age_days: int
+) -> tuple[bool, str]:
+    review = approvals.get(key)
+    if not isinstance(review, dict):
+        return False, "missing competitor relevance review"
+    verdict = str(review.get("verdict") or "").casefold()
+    if verdict != "related":
+        return False, f"competitor relevance verdict is {verdict or 'missing'}"
+    if str(review.get("country") or "").upper() != country.upper():
+        return False, "review country does not match campaign country"
+    if str(review.get("app_id") or "") != str(app_id):
+        return False, "review app_id does not match campaign adamId"
+    if not str(review.get("evidence") or "").strip():
+        return False, "review evidence is empty"
+    try:
+        reviewed_at = datetime.fromisoformat(str(review.get("reviewed_at") or ""))
+        if reviewed_at.tzinfo is None:
+            return False, "reviewed_at must include timezone"
+        age = datetime.now(timezone.utc) - reviewed_at.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return False, "reviewed_at is invalid"
+    if age < timedelta(0) or age > timedelta(days=max_age_days):
+        return False, "competitor relevance review is expired or future-dated"
+    return True, "current related review"
+
+
 def save_state(path: Path, state: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -186,6 +222,8 @@ def parse_args() -> argparse.Namespace:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--apply", action="store_true", help="Perform writes")
     mode.add_argument("--dry-run", action="store_true", help="Explicit no-write mode (the default)")
+    parser.add_argument("--relevance-file", type=Path, help="JSON approvals produced after App Store competitor review")
+    parser.add_argument("--max-relevance-age-days", type=int, default=30)
     parser.add_argument("--lookback-days", type=int, default=3)
     parser.add_argument("--signal", choices=("installs", "taps"), default="installs")
     parser.add_argument("--minimum", type=int, default=1)
@@ -200,6 +238,10 @@ def parse_args() -> argparse.Namespace:
         parser.error("aads not found; use --aads-bin")
     if args.lookback_days < 1 or args.minimum < 1:
         parser.error("lookback-days and minimum must be positive")
+    if args.max_relevance_age_days < 1:
+        parser.error("max-relevance-age-days must be positive")
+    if args.apply and args.relevance_file is None:
+        parser.error("--apply requires --relevance-file; research storefront competitors before promotion")
     if not (Decimal("0") < args.seed_floor <= args.bid_ceiling):
         parser.error("require 0 < seed-floor <= bid-ceiling")
     return args
@@ -209,6 +251,7 @@ def main() -> int:
     args = parse_args()
     api = Aads(args.aads_bin)
     state = load_state(args.state)
+    approvals = load_approvals(args.relevance_file)
     end = date.today()
     start = end - timedelta(days=args.lookback_days - 1)
     denied = [re.compile(pattern, re.IGNORECASE) for pattern in args.deny_pattern]
@@ -216,7 +259,7 @@ def main() -> int:
         "mode": "apply" if args.apply else "dry-run",
         "window": {"start": start.isoformat(), "end": end.isoformat()},
         "campaigns": [], "created_exact": 0, "created_negative": 0,
-        "already_complete": 0, "skipped": [], "errors": [],
+        "already_complete": 0, "research_required": [], "skipped": [], "errors": [],
     }
 
     campaigns = [c for c in api.campaigns() if c.get("status") == "ENABLED"]
@@ -258,6 +301,26 @@ def main() -> int:
                 if exact_ok and negative_ok:
                     summary["already_complete"] += 1
                     state["processed"][key] = {"text": term, "campaign": name, "verified": True}
+                    continue
+
+                app_id = campaign.get("adamId")
+                approved, review_reason = relevance_approved(
+                    approvals, key, str(countries[0]), app_id, args.max_relevance_age_days
+                )
+                if not approved:
+                    summary["research_required"].append({
+                        "campaign": name,
+                        "campaign_id": cid,
+                        "country": countries[0],
+                        "app_id": app_id,
+                        "term": term,
+                        "reason": review_reason,
+                        "research_argv": [
+                            "python3", "scripts/app_store_relevance.py",
+                            "--keyword", term, "--app-id", str(app_id),
+                            "--country", str(countries[0]), "--limit", "10",
+                        ],
+                    })
                     continue
 
                 avg_cpt = money(total.get("avgCPT"))
