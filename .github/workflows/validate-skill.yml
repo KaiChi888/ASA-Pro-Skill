@@ -1,0 +1,33 @@
+name: Validate Agent Skill
+
+on:
+  push:
+    branches: [main, develop, "feature/**", "release/**", "hotfix/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Discover skill with skills CLI
+        run: npx --yes skills add . --list
+      - name: Validate Python automation
+        run: python -m py_compile skills/asa-pro/scripts/broad_to_exact.py
+      - name: Verify required package files
+        run: |
+          test -f skills/asa-pro/SKILL.md
+          test -f README.md
+          test -f skills/asa-pro/references/setup.md
+          test -f skills/asa-pro/references/safety-and-troubleshooting.md
+          test -f skills/asa-pro/scripts/broad_to_exact.py
+          test -f skills/asa-pro/templates/campaign-blueprint.yaml
