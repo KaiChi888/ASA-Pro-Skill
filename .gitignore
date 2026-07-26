@@ -1,0 +1,15 @@
+# Credentials and local state
+.aads/
+*.pem
+*.key
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/

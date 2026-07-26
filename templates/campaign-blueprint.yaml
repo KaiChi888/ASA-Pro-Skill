@@ -1,0 +1,34 @@
+# Replace placeholders. Never store credentials here.
+app_name: MyApp
+adam_id: "1234567890"
+currency: USD
+country: US
+campaign:
+  name: "MyApp - US"
+  placement: APPSTORE_SEARCH_RESULTS
+  bidding_strategy: MANUAL_CPT
+  daily_budget: "20.00" # owner approval required
+ad_groups:
+  - name: Broad Discovery
+    match_type: BROAD
+    search_match: false
+    default_bid: "1.00"
+    targeting:
+      age: null
+      gender: null
+      app_downloaders_excluded: ["1234567890"]
+  - name: Exact Match
+    match_type: EXACT
+    search_match: false
+    default_bid: "1.00"
+    targeting:
+      age: null
+      gender: null
+      app_downloaders_excluded: ["1234567890"]
+promotion:
+  signal: installs
+  minimum: 1
+  lookback_days: 3
+  seed_floor: "1.00"
+  avg_cpt_buffer: "0.05"
+  bid_ceiling: "2.00"
