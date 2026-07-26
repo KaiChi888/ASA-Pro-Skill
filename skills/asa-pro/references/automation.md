@@ -4,6 +4,8 @@
 
 `scripts/broad_to_exact.py` discovers enabled one-country campaigns, pairs Broad/Exact groups, reads recent terms, defaults to at least one install, creates/verifies Exact before Broad Exact negative, saves state in `~/.aads/asa-pro-state.json`, and supports `--dry-run`.
 
+The included script uses strict name pairing as a portable starter. In production, maintain a reviewed app/country ID registry and validate those IDs before each mutation; names can be renamed or collide.
+
 ```bash
 python3 scripts/broad_to_exact.py --dry-run
 python3 scripts/broad_to_exact.py --dry-run --campaign-name-prefix "MyApp -"

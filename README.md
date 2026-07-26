@@ -24,7 +24,7 @@ List available skills first:
 npx skills add KaiChi888/ASA-Pro-Skill --list
 ```
 
-The root `SKILL.md` exposes the `asa-pro` skill to agents supported by the [skills CLI](https://github.com/vercel-labs/skills).
+The skill at `skills/asa-pro/SKILL.md` exposes `asa-pro` to agents supported by the [skills CLI](https://github.com/vercel-labs/skills).
 
 ### Operating logic
 
@@ -37,6 +37,7 @@ The root `SKILL.md` exposes the `asa-pro` skill to agents supported by the [skil
 - Revenue-proven Exact winners can be split into dedicated campaigns.
 - Keywords start around USD 1–2, then bids are reduced gradually toward efficient avgCPT.
 - Deterministic three-hour harvesting plus daily reasoning-based bid review.
+- CI validation plus safety/troubleshooting ladders for zero exposure, broken attribution, and partial mutations.
 - Apple Ads operations via [`aads`](https://github.com/SaadBelfqih/apple-ads-cli).
 - Revenue analysis via [`rc`](https://github.com/SaadBelfqih/rc-cli).
 
@@ -50,10 +51,10 @@ The root `SKILL.md` exposes the `asa-pro` skill to agents supported by the [skil
 6. Approve target countries and daily budgets.
 7. Create one campaign per country with Broad and Exact ad groups.
 8. Verify New Users targeting and RUNNING status.
-9. Seed localized keywords and test `scripts/broad_to_exact.py --dry-run`.
+9. Seed localized keywords and test `python3 skills/asa-pro/scripts/broad_to_exact.py --dry-run --campaign-name-prefix "YOUR APP -"`.
 10. Enable three-hour harvesting and daily Exact bid review after two clean dry runs.
 
-See [`SKILL.md`](SKILL.md) and [`references/setup.md`](references/setup.md).
+See [`skills/asa-pro/SKILL.md`](skills/asa-pro/SKILL.md) and [`skills/asa-pro/references/setup.md`](skills/asa-pro/references/setup.md).
 
 ### CLI installation
 
@@ -100,7 +101,7 @@ npx skills add KaiChi888/ASA-Pro-Skill --all
 npx skills add KaiChi888/ASA-Pro-Skill --list
 ```
 
-根目錄的 `SKILL.md` 會被辨識為 `asa-pro` Skill，可供 [skills CLI](https://github.com/vercel-labs/skills) 支援的 Agent 使用。
+根目錄下 `skills/asa-pro/SKILL.md` 會被辨識為 `asa-pro` Skill，可供 [skills CLI](https://github.com/vercel-labs/skills) 支援的 Agent 使用。
 
 ### 核心廣告邏輯
 
@@ -113,6 +114,7 @@ npx skills add KaiChi888/ASA-Pro-Skill --list
 - 有收入、付費訂閱與良好 ROAS 的 Exact 關鍵字，可拆成獨立 Campaign。
 - 新關鍵字先用約 **US$1–2** 取得曝光，再依 avgCPT、下載與收入逐步降價。
 - 每三小時執行 deterministic Broad → Exact；每天一次由 Agent 綜合 3/7 日資料與 RevenueCat 審查 Exact 出價。
+- 內建 CI 驗證、安全護欄，以及零曝光、歸因中斷、部分寫入失敗的排查流程。
 - Apple Ads 操作用 [`aads`](https://github.com/SaadBelfqih/apple-ads-cli)。
 - RevenueCat 收入歸因用 [`rc`](https://github.com/SaadBelfqih/rc-cli)。
 
@@ -126,10 +128,10 @@ npx skills add KaiChi888/ASA-Pro-Skill --list
 6. 由使用者確認國家與每日預算。
 7. 每國建立 Campaign、Broad 與 Exact 群組。
 8. 驗證 New Users targeting 與 RUNNING 狀態。
-9. 加入在地化關鍵字，測試 `scripts/broad_to_exact.py --dry-run`。
+9. 加入在地化關鍵字，測試 `python3 skills/asa-pro/scripts/broad_to_exact.py --dry-run --campaign-name-prefix "YOUR APP -"`。
 10. 連續兩次 dry-run 正確後，再啟用每三小時採集與每日出價審查。
 
-完整流程請看 [`SKILL.md`](SKILL.md) 與 [`references/setup.md`](references/setup.md)。
+完整流程請看 [`skills/asa-pro/SKILL.md`](skills/asa-pro/SKILL.md) 與 [`skills/asa-pro/references/setup.md`](skills/asa-pro/references/setup.md)。
 
 ### CLI 安裝
 

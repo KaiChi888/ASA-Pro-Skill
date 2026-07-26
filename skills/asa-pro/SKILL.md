@@ -1,12 +1,13 @@
 ---
 name: asa-pro
-version: 1.0.0
 description: Build and operate production Apple Search Ads Advanced campaigns with country-by-country Broad-to-Exact structure, New Users targeting, RevenueCat attribution, revenue-based keyword isolation, and CPT cost control using aads and rc CLI.
-author: KaiChi888
 license: MIT
+compatibility: Requires internet access and the aads CLI; rc is required for RevenueCat analysis. Go 1.25+ is required only when building either CLI from source.
 metadata:
-  tags: [apple-search-ads, asa, app-growth, revenuecat, roas, automation]
-  homepage: https://github.com/KaiChi888/ASA-Pro-Skill
+  author: "KaiChi888"
+  version: "1.0.1"
+  tags: "apple-search-ads, asa, app-growth, revenuecat, roas, automation"
+  homepage: "https://github.com/KaiChi888/ASA-Pro-Skill"
 ---
 
 # ASA Pro
@@ -37,13 +38,14 @@ Read `references/setup.md` before mutations.
 1. Install and configure `aads`.
 2. Install and configure `rc` with a RevenueCat v2 read-only secret.
 3. Verify AdServices attribution reaches RevenueCat; revenue without ASA attributes is not keyword ROAS.
-4. Inventory apps, organization, campaigns, ad groups, keywords, negatives, targeting, budgets, and serving reasons.
-5. Prepare a dry-run country blueprint. The owner must approve countries and daily budgets.
-6. Create one campaign per country, then Broad and Exact ad groups.
-7. Set New Users targeting at creation and verify no `PENDING_AUDIENCE_VERIFICATION` hold.
-8. Seed localized Broad and Exact keywords at USD 1–2; keep active keyword intent non-overlapping.
-9. Run `scripts/broad_to_exact.py --dry-run` until coverage and routing are correct.
-10. Schedule deterministic harvesting every three hours and reasoning-based Exact bid review once daily.
+4. Confirm billing, storefront eligibility, product-page/paywall readiness, currency, timezone, attribution window, ROAS basis, and payback target.
+5. Inventory apps, organization, campaigns, ad groups, keywords, negatives, targeting, budgets, and serving reasons. Persist a non-secret ID registry.
+6. Prepare a dry-run country blueprint. The owner must approve countries and daily budgets.
+7. Provision paused first where supported; create one campaign per country, then Broad and Exact ad groups.
+8. Set New Users targeting and verify no `PENDING_AUDIENCE_VERIFICATION` hold before enabling.
+9. Seed localized Broad and Exact keywords at USD 1–2; keep active keyword intent non-overlapping.
+10. Run `scripts/broad_to_exact.py --dry-run` until coverage and routing are correct.
+11. Schedule deterministic harvesting every three hours and reasoning-based Exact bid review once daily.
 
 ## Blueprint
 
@@ -136,6 +138,8 @@ Reports should omit no-data campaigns. The three-hour report includes actions, f
 
 Before writes, confirm organization, app `adamId`, country, IDs, currency, status, existing keywords/negatives (`--all`), and dry-run scope. Preserve a redacted JSON audit record.
 
+Use names only for discovery. Production mutation scope should come from a reviewed app/country registry of campaign and ad-group IDs. Put deterministic caps after agent reasoning: min/max bid, maximum percentage/absolute change, per-run mutation cap, protected winners, 24/48-hour cooldowns, single-instance lock, and a kill switch.
+
 After writes, re-list and verify status, match type, bid, New Users targeting, and serving reasons. If `PENDING_AUDIENCE_VERIFICATION` appears, report it and do not claim serving. Never claim ROAS when RevenueCat ASA attribution is missing or unverified.
 
 ## References
@@ -145,5 +149,6 @@ After writes, re-list and verify status, match type, bid, New Users targeting, a
 - `references/automation.md` — deterministic cron and state.
 - `references/bidding-and-splitting.md` — cost control and dedicated campaigns.
 - `references/revenuecat.md` — RevenueCat commands, attribution health, and revenue definitions.
+- `references/safety-and-troubleshooting.md` — business gates, hard guardrails, recovery, and diagnostic ladders.
 - `templates/campaign-blueprint.yaml` — campaign checklist.
 - `templates/cron-prompts.md` — scheduler briefs.

@@ -34,6 +34,8 @@ Attribution coverage = RevenueCat ASA-attributed customers / Apple Ads installs
 
 Subscription existence does not prove payment; require positive revenue. Gross ROAS near 100% is not necessarily profitable after commission, tax, and refunds.
 
+Never mix currencies silently. Normalize spend and revenue using a recorded FX source/date. Compare acquisition cohorts at suitable maturity points (for example D1/D7/D14/D30/D90) rather than mixing current spend with lifetime account revenue.
+
 ## Dedicated campaign gate
 
 Prefer 60 inclusive days plus 3/7/14-day trends. Qualify when there is meaningful spend/install volume, attributed paid revenue or LTV, a reason for independent control, and sufficient attribution coverage.
