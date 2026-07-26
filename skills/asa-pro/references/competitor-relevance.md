@@ -28,9 +28,26 @@ Use normal web/browser search first when it adds context. Useful queries include
 "<competitor name>" pricing subscription
 ```
 
+For ASA keyword intent, the preferred browser check is Apple's own country-specific iPhone search page:
+
+```text
+https://apps.apple.com/<cc>/iphone/search?term=<URL_ENCODED_KEYWORD>
+```
+
+Example:
+
+```text
+https://apps.apple.com/us/iphone/search?term=keyword
+```
+
+Open this URL in the browser and inspect the ranked result apps shown by Apple for that storefront. This is the primary visual competitor/intent check before Broad → Exact. Record the result heading, top 5–10 app names, their product-page URLs, and whether the dominant result set solves the same job as the advertised app. The `term` value must be URL-encoded and the country segment must match the campaign country.
+
 Google, Bing, or DuckDuckGo may return CAPTCHA, Cloudflare, or bot blocks. Do not spend time bypassing them. Switch to direct URLs and APIs:
 
 ```text
+# Preferred visual App Store keyword search
+https://apps.apple.com/<cc>/iphone/search?term=<URL_ENCODED_KEYWORD>
+
 # Country-specific App Store discovery (URL-encode term)
 https://itunes.apple.com/search?term=<TERM>&country=<CC>&entity=software&limit=30
 
@@ -55,11 +72,12 @@ Use `trackViewUrl` from the iTunes response rather than guessing localized App S
 
 ### Evidence priority and fallback
 
-1. Country-specific iTunes Search/Lookup API for reproducible discovery and IDs.
-2. App Store product URL for actual user-facing positioning/screenshots/IAP.
-3. `aads apps search` for Apple Ads-side discovery.
-4. Normal web search for reviews, product sites, and broader context.
-5. Sensor Tower public overview for optional directional market evidence.
+1. `apps.apple.com/<cc>/iphone/search?term=...` for Apple's country-specific visible keyword result order.
+2. Country-specific iTunes Search/Lookup API for reproducible metadata and IDs.
+3. App Store product URL for actual user-facing positioning/screenshots/IAP.
+4. `aads apps search` for Apple Ads-side discovery.
+5. Normal web search for reviews, product sites, and broader context.
+6. Sensor Tower public overview for optional directional market evidence.
 
 Search engine snippets alone are insufficient for `related`; verify with App Store descriptions/product pages or direct API metadata. If browser extraction is blocked, record the block and continue with direct sources rather than fabricating evidence.
 
