@@ -32,6 +32,7 @@ jobs:
           test -f skills/asa-pro/references/setup.md
           test -f skills/asa-pro/references/safety-and-troubleshooting.md
           test -f skills/asa-pro/references/competitor-relevance.md
+          test -f skills/asa-pro/references/daily-dedicated-campaign-review.md
           test -f skills/asa-pro/scripts/broad_to_exact.py
           test -f skills/asa-pro/scripts/app_store_relevance.py
           test -f skills/asa-pro/templates/relevance-approvals.json
