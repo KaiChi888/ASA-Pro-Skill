@@ -34,7 +34,7 @@ def tokens(value: str) -> set[str]:
 def fetch_json(url: str) -> dict[str, Any]:
     request = urllib.request.Request(
         url,
-        headers={"User-Agent": "ASA-Pro-Skill/1.1 (+https://github.com/KaiChi888/ASA-Pro-Skill)"},
+        headers={"User-Agent": "ASA-Pro-Skill/1.2.1 (+https://github.com/KaiChi888/ASA-Pro-Skill)"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
         return json.load(response)

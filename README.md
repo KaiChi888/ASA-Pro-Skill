@@ -68,6 +68,8 @@ python3 skills/asa-pro/scripts/app_store_relevance.py \
 
 The tool queries the country-specific iTunes Lookup/Search APIs and returns the advertised app, top result apps, genres, descriptions, ratings, links, and comparison signals. An agent or human must inspect dominant user intent and record `related`, `ambiguous`, or `irrelevant`; the heuristic suggestion never auto-approves. `broad_to_exact.py --apply` now refuses to run without a current approval file, and only `related` terms can be mutated. See [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md).
 
+ASA Pro also includes the machine's URL/browser research workflow: Google/Bing/DuckDuckGo or agent web search when useful, country-specific iTunes Search/Lookup URLs, direct App Store product pages, `aads apps search`, and Sensor Tower public overview URLs. If a search engine returns CAPTCHA/Cloudflare, it switches to direct sources instead of trying to bypass the block. Source URL, storefront, retrieval date, and visible evidence must be recorded; snippets alone cannot approve relevance.
+
 ### Daily dedicated-campaign decision queue
 
 Once per day, ASA Pro reviews Exact keywords using 30–60-day Apple Ads and RevenueCat evidence plus 3/7/14-day trends. It displays only actionable `scale independently` or `isolate for cost control` candidates, including spend, installs, CPI, paid customers, revenue/ROAS basis, attribution coverage, proposed campaign/bid, budget redistribution versus expansion, migration plan, and rollback. The user chooses `approve`, `hold`, or `reject` per immutable candidate ID. No campaign is split, no budget is moved, and no source keyword is paused without explicit approval. See [`daily-dedicated-campaign-review.md`](skills/asa-pro/references/daily-dedicated-campaign-review.md).
@@ -160,6 +162,8 @@ python3 skills/asa-pro/scripts/app_store_relevance.py \
 ```
 
 工具會查詢指定國家的 iTunes Lookup／Search API，輸出被投放 App、搜尋結果前幾名 App、類別、描述、評分、連結與比對訊號。Agent 或人工必須依主要使用者意圖判斷 `related`、`ambiguous` 或 `irrelevant`；工具的 heuristic 建議不會自動核准。現在 `broad_to_exact.py --apply` 沒有有效審查檔就會拒絕寫入，而且只有 `related` 能建立 Exact 與 Broad Negative。詳見 [`competitor-relevance.md`](skills/asa-pro/references/competitor-relevance.md)。
+
+ASA Pro 也已納入這台設備的網址／Browser 競品研究流程：需要時使用 Google、Bing、DuckDuckGo 或 Agent 網頁搜尋，搭配指定國家的 iTunes Search／Lookup URL、App Store 商品頁、`aads apps search` 與 Sensor Tower 公開 Overview URL。遇到 CAPTCHA／Cloudflare 時不嘗試繞過，直接改用 API 與直接網址。審查要保存來源 URL、Storefront、取得日期與實際可見證據；只有搜尋摘要不能核准相關性。
 
 ### 每日獨立 Campaign 決策清單
 
