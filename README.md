@@ -12,6 +12,14 @@ A reusable Agent Skill for Apple Search Ads Advanced: country-by-country Broad �
 npx skills add KaiChi888/ASA-Pro-Skill
 ```
 
+Security-hardened, telemetry-disabled install pinned to this reviewed release:
+
+```bash
+DO_NOT_TRACK=1 npm_config_ignore_scripts=true \
+  npx --yes skills@1.5.20 add \
+  'KaiChi888/ASA-Pro-Skill#v1.2.3' --skill asa-pro
+```
+
 Install non-interactively for all supported agents:
 
 ```bash
@@ -103,7 +111,7 @@ rc version
 
 ### Security
 
-Never commit Apple private keys, private account IDs, RevenueCat secret keys, customer exports, or local CLI configs. This repository contains placeholders only.
+Never commit Apple private keys, private account IDs, RevenueCat secret keys, customer exports, or local CLI configs. This repository contains placeholders only. Local state/research files are written mode `0600`, Broad → Exact uses a non-blocking single-instance lock, and CLI errors are secret-redacted before reporting. CI scans both the working tree and Git history with Gitleaks. See [`SECURITY.md`](SECURITY.md).
 
 ---
 
@@ -113,6 +121,14 @@ Never commit Apple private keys, private account IDs, RevenueCat secret keys, cu
 
 ```bash
 npx skills add KaiChi888/ASA-Pro-Skill
+```
+
+固定於本次已審查版本、關閉 Telemetry 的安全安裝方式：
+
+```bash
+DO_NOT_TRACK=1 npm_config_ignore_scripts=true \
+  npx --yes skills@1.5.20 add \
+  'KaiChi888/ASA-Pro-Skill#v1.2.3' --skill asa-pro
 ```
 
 非互動安裝到所有支援的 Agent：
@@ -206,7 +222,7 @@ rc version
 
 ### 安全提醒
 
-不要提交 Apple 私鑰、私有帳戶 ID、RevenueCat Secret Key、客戶資料或本機 CLI 設定。本 Repo 只含 placeholder。
+不要提交 Apple 私鑰、私有帳戶 ID、RevenueCat Secret Key、客戶資料或本機 CLI 設定。本 Repo 只含 placeholder。本機 state／競品研究輸出會以 `0600` 寫入，Broad → Exact 有單一程序鎖，CLI 錯誤在輸出前會遮蔽常見 Secret；CI 也會以 Gitleaks 掃描目前檔案與完整 Git 歷史。詳見 [`SECURITY.md`](SECURITY.md)。
 
 ## License
 
