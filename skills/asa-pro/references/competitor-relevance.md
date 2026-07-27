@@ -135,12 +135,12 @@ Store approvals outside the repository, for example `~/.aads/asa-pro-relevance.j
 {
   "schema_version": 1,
   "approvals": {
-    "2144289621|keyword": {
+    "1234567890|keyword": {
       "verdict": "related",
       "reviewed_at": "2026-07-27T07:00:00+08:00",
       "country": "US",
       "app_id": "1234567890",
-      "evidence": "Top results are keyword, EMF, spirit-box, and paranormal tools; intent matches the advertised app.",
+      "evidence": "Top results solve the same user need as the advertised app.",
       "competitor_ids": ["111111111", "222222222"]
     }
   }
