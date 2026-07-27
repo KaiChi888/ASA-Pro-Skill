@@ -17,17 +17,92 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 
+try:
+    import fcntl
+except ImportError:  # Windows fallback below
+    fcntl = None
+
 CENT = Decimal("0.01")
 DEFAULT_STATE = Path.home() / ".aads" / "asa-pro-state.json"
+DEFAULT_LOCK = Path.home() / ".aads" / "asa-pro-broad-to-exact.lock"
+
+SECRET_PATTERNS = (
+    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----.*?-----END (?:RSA |EC |OPENSSH )?PRIVATE KEY-----", re.DOTALL),
+    re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b"),
+    re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
+    re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
+    re.compile(r"\bSEARCHADS\.[A-Za-z0-9-]{16,}\b"),
+    re.compile(r"(?i)(authorization\s*[:=]\s*)[^\r\n,;]+"),
+    re.compile(r"(?i)((?:client[_ -]?id|team[_ -]?id|key[_ -]?id|organization[_ -]?id|private[_ -]?key(?:[_ -]?path)?)\s*[:=]\s*)[^\s,;]+"),
+    re.compile(r"(?i)((?:api[_ -]?key|token|password|secret)\s*[:=]\s*)[^\s,;]+"),
+)
 
 
 def normalize(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip()).casefold()
+
+
+def redact_secrets(text: str) -> str:
+    redacted = text
+    for pattern in SECRET_PATTERNS:
+        redacted = pattern.sub(lambda match: (match.group(1) if match.lastindex else "") + "[REDACTED]", redacted)
+    return redacted[:4000]
+
+
+def secure_write_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(tmp_name, path)
+    except Exception:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+
+
+def acquire_lock(path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    flags = os.O_RDWR | os.O_CREAT
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    fd = os.open(path, flags, 0o600)
+    os.fchmod(fd, 0o600)
+    handle = os.fdopen(fd, "a+")
+    try:
+        if fcntl is not None:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        else:  # pragma: no cover - exercised on Windows
+            import msvcrt
+
+            handle.seek(0)
+            if not handle.read(1):
+                handle.write("0")
+                handle.flush()
+            handle.seek(0)
+            getattr(msvcrt, "locking")(
+                handle.fileno(), getattr(msvcrt, "LK_NBLCK"), 1
+            )
+    except (BlockingIOError, OSError) as exc:
+        handle.close()
+        raise RuntimeError(f"another broad-to-exact process holds {path}") from exc
+    return handle
 
 
 def money(value: Any) -> Decimal:
@@ -62,8 +137,8 @@ class Aads:
         )
         if proc.returncode:
             raise RuntimeError(
-                f"aads {' '.join(args)} failed ({proc.returncode}): "
-                f"{proc.stderr.strip() or proc.stdout.strip()}"
+                f"aads {redact_secrets(' '.join(args))} failed ({proc.returncode}): "
+                f"{redact_secrets(proc.stderr.strip() or proc.stdout.strip())}"
             )
         text = proc.stdout.strip()
         return json.loads(text) if text else None
@@ -182,11 +257,7 @@ def relevance_approved(
 
 
 def save_state(path: Path, state: dict[str, Any]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(path.suffix + ".tmp")
-    tmp.write_text(json.dumps(state, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
-    os.chmod(tmp, 0o600)
-    tmp.replace(path)
+    secure_write_text(path, json.dumps(state, indent=2, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 def calculate_bid(avg_cpt: Decimal, floor: Decimal, buffer: Decimal, ceiling: Decimal) -> Decimal:
@@ -232,6 +303,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bid-ceiling", type=Decimal, default=Decimal("2.00"))
     parser.add_argument("--deny-pattern", action="append", default=[], help="Regex for terms to skip; repeatable")
     parser.add_argument("--state", type=Path, default=DEFAULT_STATE)
+    parser.add_argument("--lock-file", type=Path, default=DEFAULT_LOCK)
     parser.add_argument("--aads-bin", default=shutil.which("aads"))
     args = parser.parse_args()
     if not args.aads_bin:
@@ -247,8 +319,7 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main() -> int:
-    args = parse_args()
+def run(args: argparse.Namespace) -> int:
     api = Aads(args.aads_bin)
     state = load_state(args.state)
     approvals = load_approvals(args.relevance_file)
@@ -348,10 +419,10 @@ def main() -> int:
                     state["processed"][key] = {"text": term, "campaign": name, "exact_adgroup_id": exact_id, "broad_adgroup_id": broad_id, "bid": format(bid, "f"), "currency": currency, "verified": True}
                     save_state(args.state, state)
                 except Exception as exc:  # continue other terms while reporting exact scope
-                    summary["errors"].append({"campaign": name, "term": term, "error": str(exc)})
+                    summary["errors"].append({"campaign": name, "term": term, "error": redact_secrets(str(exc))})
             summary["campaigns"].append(campaign_result)
         except Exception as exc:
-            summary["errors"].append({"campaign": name, "error": str(exc)})
+            summary["errors"].append({"campaign": name, "error": redact_secrets(str(exc))})
 
     if args.apply:
         save_state(args.state, state)
@@ -359,5 +430,18 @@ def main() -> int:
     return 1 if summary["errors"] else 0
 
 
+def main() -> int:
+    args = parse_args()
+    lock_handle = acquire_lock(args.lock_file)
+    try:
+        return run(args)
+    finally:
+        lock_handle.close()
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as exc:
+        print(json.dumps({"error": redact_secrets(str(exc))}, ensure_ascii=False), file=sys.stderr)
+        sys.exit(1)

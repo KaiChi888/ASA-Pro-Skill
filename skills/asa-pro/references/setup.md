@@ -41,19 +41,30 @@ aads campaigns list --all -o table
 
 The config is `~/.aads/config.yaml`. Keep it and the PEM out of Git; restrict file permissions.
 
+```bash
+umask 077
+chmod 700 "$HOME/.aads"
+chmod 600 "$HOME/.aads/config.yaml" /path/to/apple-ads-private-key.pem
+```
+
+Never pass private-key contents, Apple client secrets, or API tokens on command lines, in cron prompts, or in copied debug output. Configure them interactively or in local mode-0600 files only.
+
 ## 4. Configure RevenueCat
 
 Create a RevenueCat v2 secret with read-only access to charts/metrics, customers/attributes, apps, subscriptions, and purchases.
 
 ```bash
 rc configure
-rc config show
 rc projects list -o table
 rc apps list -o table
 rc metrics overview -o table
 ```
 
-The default config is `~/.aads/rc-cli.yaml`. For multiple projects, use separate mode-0600 configs and switch explicitly; never commit them.
+The default config is `~/.aads/rc-cli.yaml`. For multiple projects, use separate mode-0600 configs and switch explicitly; never commit them. Do not run or share config-display commands unless you have verified that the CLI redacts secrets.
+
+```bash
+chmod 600 "$HOME/.aads/rc-cli.yaml"
+```
 
 ## 5. Verify ASA attribution—not merely revenue
 
